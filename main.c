@@ -47,6 +47,11 @@ int main() {
     bool led_state = false;
 
     int state =1;
+    /*
+     state 1 = käyttäjän odottaminen, kalibrointi
+     state 2 = dosetin toiminta
+     */
+
     while (1){
         switch (state) {
             case 1:
@@ -68,8 +73,9 @@ int main() {
                 }
                 break;
             case 2:
-                //tähän pyöritys 30sec välien ja pilerin tippumisen tunnistus
-                ;
+                //tähän pyöritys 30sec välein ja pilerin tippumisen tunnistus
+                    ;
+
         }
     }
 
