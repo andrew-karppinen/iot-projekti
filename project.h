@@ -23,3 +23,4 @@ typedef  struct {
 
 void calib(state *motor);
 void run_motor(state motor,int steps);
+
