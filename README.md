@@ -1,5 +1,7 @@
 # Pill dispenser
 
+https://trello.com/invite/b/68009db1367e5a3f3aab02a4/ATTIac03dd996420263842bd50b3a2fa9782C156800F/iot-projekti
+
 Pill dispenser consist of three main parts: controller PCB, dispenser base and dispenser wheel.
 Dispenser base contains a stepper motor for turning the dispenser wheel, a piezo electric sensor for
 detecting if a pill is dispensed and an optical sensor for calibrating the wheel position. Dispenser
