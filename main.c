@@ -46,21 +46,31 @@ int main() {
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
     bool led_state = false;
 
-    while (1) { //odotetaan napin painallusta
-        if (read_button(BUTTON)==0) {
-            break;
-        }
+    int state =1;
+    while (1){
+        switch (state) {
+            case 1:
+                while (1) { //odotetaan napin painallusta
+                    if (read_button(BUTTON)==0) {
+                        break;
+                    }
 
-        uint64_t now = time_us_64(); //ledin vilkutus
-        if (now - last_toggle >= LED_INTERVAL) {
-            led_state = !led_state;  // vaihdetaan tila
-            gpio_put(LED_PIN, led_state);
-            last_toggle = now;
+                    uint64_t now = time_us_64(); //ledin vilkutus
+                    if (now - last_toggle >= LED_INTERVAL) {
+                        led_state = !led_state;  // vaihdetaan tila
+                        gpio_put(LED_PIN, led_state);
+                        last_toggle = now;
+                    }
+                }
+                calib(&data); //kalibroidaan
+                if (data.calibrated==true) { //varmistetaan että calibrointi onnistui
+                    state =2;
+                }
+                break;
+            case 2:
+                //tähän pyöritys 30sec välien ja pilerin tippumisen tunnistus
+                ;
         }
-
     }
-
-    calib(&data);
-    printf("Kalibroitu: %d",data.calibrated);
 
 }

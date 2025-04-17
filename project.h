@@ -17,7 +17,7 @@
 #define LED_INTERVAL 200000 // ledin vilkutuksen ajastus, 100 ms = 100000 mikrosekuntia
 
 
-//structi jossa dataa ja ohjelman tilaa säilytetään
+//structi jossa dataa säilytetään
 typedef  struct {
     bool calibrated;
     int step_counts; //askelmäärien keskiarvo
