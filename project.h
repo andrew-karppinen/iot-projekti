@@ -8,6 +8,8 @@
 #define MOTOR_SPEED_DELAY 1  //moottorin nopeus
 #define FALL_TIME 85 // voidaan käyttää jos tarvitsee. luukulta sensorille kuluva aika
 
+#define PIEZO_SENSITIVITY 80 //piezo sensorin herkkyys
+
 //askelmoottori pinnit:
 #define IN1 2
 #define IN2 3
@@ -16,15 +18,16 @@
 
 #define BUTTON 7
 #define LED_PIN 20
-#define LED_INTERVAL 200000 // ledin vilkutuksen ajastus, 100 ms = 100000 mikrosekuntia
+#define LED_INTERVAL 200000 //ledin vilkkumisen väli
 
 
-//structi jossa dataa säilytetään
+//structi jossa dataa säilytetään, anturien ja moottorien tilatietoja
 typedef  struct {
     bool piezo_hit;
     bool calibrated;
     int step_counts; //askelmäärien keskiarvo
     int current_step; //0-7
+    int steps_to_move_1; //askelmäärä per luukku: step_counts / 8
 } program_data;
 
 
@@ -32,6 +35,6 @@ typedef  struct {
 
 void calib(program_data *motor);
 void run_motor(program_data *motor,int steps);
-void run_motor_30(program_data *motor, int steps);
+void run_motor_30(program_data *motor);
 
 #endif //PROJECT_H
