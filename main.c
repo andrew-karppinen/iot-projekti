@@ -20,6 +20,7 @@ void init_pins() {
 
     //piezo sensor
     adc_init();
+    adc_set_clkdiv(0);
     adc_gpio_init(PIEZO_SENSOR);
     adc_select_input(1);
 }
@@ -32,17 +33,15 @@ void blink_led(int times, int duration_ms) {
         sleep_ms(duration_ms);
     }
 }
-
 bool sensorHit(program_data *data) {
     uint16_t value = adc_read();
-    if (value > 150) {
-        printf("Hit, adc value: %d\n", value); // voi poistaa
+    if (value > 80) {
+        printf("Hit. adc value: %d\n", value);
         data->piezo_hit = true;
         return true;
     }
     return false;
 }
-
 
 bool read_button(int button)
 {
@@ -57,8 +56,6 @@ bool read_button(int button)
     return true;
 }
 
-
-
 int main() {
     init_pins();
     //alustetaan tietorakenne:
@@ -66,6 +63,7 @@ int main() {
     data.calibrated = false;
     data.current_step = 0;
     data.step_counts = 0;
+    data.piezo_hit = false;
 
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
     bool led_state = false;
@@ -97,17 +95,23 @@ int main() {
             }
             break;
             case 2:
-                //tähän pyöritys 30sec välein ja pilerin tippumisen tunnistus
-                    if (sensorHit(&data)) {
-                        printf("Pill detected\n"); // tähän mitä tapahtuu kun tunnistetaan pilleri
-                        // break; // pysähdytään
-                    }
-            sleep_ms(1);
-        }
+                //tähän pyöritys 30sec välein ja pilerin tiptumisen tunnistus
+            data.piezo_hit = false;
+            run_motor_30(&data, 509); // 30 sek välein pyörii
 
-        if (!data.piezo_hit) {
-            blink_led(5, 400); //jos pilleriä ei tunnisteta, led vilkkuu
+            if (sensorHit(&data)) {
+                printf("Pill detected\n");
+                //tähän mitä tapahtuu kun pilleri tunnistetaan
+            }
+
+            if (!data.piezo_hit) {
+                //jos pilleriä ei tunnisteta, led vilkkuu 5x
+                // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
+                //blink_led(5, 500);
+                sleep_ms(5); // adjusting the piezo sensor checking speed.
+
+            }
+            break;
+            }
         }
     }
-
-}

@@ -6,6 +6,7 @@
 #define PIEZO_SENSOR 27 //piezo sensori
 
 #define MOTOR_SPEED_DELAY 1  //moottorin nopeus
+#define FALL_TIME 85 // voidaan käyttää jos tarvitsee. luukulta sensorille kuluva aika
 
 //askelmoottori pinnit:
 #define IN1 2
@@ -30,6 +31,7 @@ typedef  struct {
 //funktiomäärittelyt:
 
 void calib(program_data *motor);
-void run_motor(program_data motor,int steps);
+void run_motor(program_data *motor,int steps);
+void run_motor_30(program_data *motor, int steps);
 
 #endif //PROJECT_H
