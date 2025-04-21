@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "project.h"
-
+#include "hardware/adc.h"
 
 void init_pins() {
     //kaikki pinnien alustukseen liittyvä tähän
@@ -17,6 +17,30 @@ void init_pins() {
     gpio_init(IN4); gpio_set_dir(IN4, GPIO_OUT);
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
+
+    //piezo sensor
+    adc_init();
+    adc_gpio_init(PIEZO_SENSOR);
+    adc_select_input(1);
+}
+//käytetään jos piezo ei tunnistanut mitään
+void blink_led(int times, int duration_ms) {
+    for (int i = 0; i < times; i++) {
+        gpio_put(LED_PIN, 1);
+        sleep_ms(duration_ms);
+        gpio_put(LED_PIN, 0);
+        sleep_ms(duration_ms);
+    }
+}
+
+bool sensorHit(program_data *data) {
+    uint16_t value = adc_read();
+    if (value > 150) {
+        printf("Hit, adc value: %d\n", value); // voi poistaa
+        data->piezo_hit = true;
+        return true;
+    }
+    return false;
 }
 
 
@@ -67,15 +91,21 @@ int main() {
                         last_toggle = now;
                     }
                 }
-                calib(&data); //kalibroidaan
-                if (data.calibrated==true) { //varmistetaan että calibrointi onnistui
-                    state =2;
-                }
-                break;
+            calib(&data); //kalibroidaan
+            if (data.calibrated==true) { //varmistetaan että calibrointi onnistui
+                state =2;
+            }
+            break;
             case 2:
                 //tähän pyöritys 30sec välein ja pilerin tippumisen tunnistus
-                    ;
+                    if (sensorHit(&data)) {
+                        printf("Pill detected\n"); // tähän mitä tapahtuu kun tunnistetaan pilleri
+                    }
+            sleep_ms(1);
+        }
 
+        if (!data.piezo_hit) {
+            blink_led(5, 400); //jos pilleriä ei tunnisteta, led vilkkuu
         }
     }
 

@@ -3,6 +3,7 @@
 #define PROJECT_H
 
 #define OPTO_PIN 28 //opto pinni
+#define PIEZO_SENSOR 27 //piezo sensori
 
 #define MOTOR_SPEED_DELAY 1  //moottorin nopeus
 
@@ -19,6 +20,7 @@
 
 //structi jossa dataa säilytetään
 typedef  struct {
+    bool piezo_hit;
     bool calibrated;
     int step_counts; //askelmäärien keskiarvo
     int current_step; //0-7
