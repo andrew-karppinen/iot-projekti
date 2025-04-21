@@ -101,6 +101,7 @@ int main() {
                     if (sensorHit(&data)) {
                         printf("Pill detected\n"); // tähän mitä tapahtuu kun tunnistetaan pilleri
                         // break; //pysähdytään
+
                     }
             sleep_ms(1);
         }
