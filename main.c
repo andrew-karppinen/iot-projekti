@@ -100,7 +100,7 @@ int main() {
                 //tähän pyöritys 30sec välein ja pilerin tippumisen tunnistus
                     if (sensorHit(&data)) {
                         printf("Pill detected\n"); // tähän mitä tapahtuu kun tunnistetaan pilleri
-                        // break; //pysähdytään
+                        // break; // pysähdytään
                     }
             sleep_ms(1);
         }
