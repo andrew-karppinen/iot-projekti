@@ -35,8 +35,7 @@ void blink_led(int times, int duration_ms) {
 }
 bool sensorHit(program_data *data) {
     uint16_t value = adc_read();
-    if (value > 80) {
-        printf("Hit. adc value: %d\n", value);
+    if (value > PIEZO_SENSITIVITY) {
         data->piezo_hit = true;
         return true;
     }
@@ -97,10 +96,9 @@ int main() {
             case 2:
                 //tähän pyöritys 30sec välein ja pilerin tiptumisen tunnistus
             data.piezo_hit = false;
-            run_motor_30(&data, 509); // 30 sek välein pyörii
+            run_motor_30(&data); // 30 sek välein pyörii
 
             if (sensorHit(&data)) {
-                printf("Pill detected\n");
                 //tähän mitä tapahtuu kun pilleri tunnistetaan
             }
 

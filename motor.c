@@ -30,6 +30,8 @@ void run_motor(program_data *motor, int steps) {
     }
 
     for(int i = 0; i < steps; i++) {
+        sleep_ms(MOTOR_SPEED_DELAY);
+
         if(motor->current_step == 8) {
             motor->current_step = 0;
         }
@@ -38,14 +40,15 @@ void run_motor(program_data *motor, int steps) {
         motor->current_step++;
 
         // check sensor during movement
-        uint16_t value = adc_read();
-        if(value > 80) {
-            printf("hit Value: %d\n", value); // debug
-            motor->piezo_hit = true;
-            break;
+        if(motor->piezo_hit == false) { //tarkistetaan sensori vain jos ei ole vielä osunut
+
+            uint16_t value = adc_read();
+            if (value > PIEZO_SENSITIVITY) {
+                printf("hit Value: %d\n", value); // debug
+                motor->piezo_hit = true;
+            }
         }
 
-        sleep_ms(MOTOR_SPEED_DELAY);
     }
 }
 
@@ -87,17 +90,19 @@ void calib(program_data *motor) {
     motor->calibrated = true;
     motor->step_counts = step_counter/3; //lasketaan keskiarvo
 
+    motor->steps_to_move_1 = motor->step_counts / 8; //askelmäärä per luukku
+
 
     run_motor(motor,110); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
 
 }
 // to run once in 30 sec
-void run_motor_30(program_data *motor, int steps) {
+void run_motor_30(program_data *motor) {
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
 
     if (now - last_time >= 30000000) {
-        run_motor(motor, steps);
+        run_motor(motor, motor->steps_to_move_1);
         last_time = now;
     }
 }
