@@ -108,7 +108,7 @@ int main() {
                 //jos pilleriä ei tunnisteta, led vilkkuu 5x
                 // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
                 //blink_led(5, 500);
-                sleep_ms(10);
+                sleep_ms(5);
 
             }
             break;
