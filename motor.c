@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "project.h"
+#include "hardware/adc.h"
 
 
 // Puoliaskel-sekvenssi (8 vaihetta)
@@ -22,24 +23,31 @@ void step_once(int step_index) {
     gpio_put(IN4, halfstep_sequence[step_index][3]);
 }
 
-void run_motor(program_data motor,int steps) {
-    if(motor.calibrated==false) {
+void run_motor(program_data *motor, int steps) {
+    if(motor->calibrated == false) {
         printf("No calibrated\n");
         return;
     }
 
-    for(int i=0;i<=steps;i++){
-        sleep_ms(MOTOR_SPEED_DELAY);
-
-        if(motor.current_step==8){ //curent step pyörii väliä 0-7
-            motor.current_step=0;
+    for(int i = 0; i < steps; i++) {
+        if(motor->current_step == 8) {
+            motor->current_step = 0;
         }
 
-        step_once(motor.current_step);
-        motor.current_step++;
+        step_once(motor->current_step);
+        motor->current_step++;
+
+        // check sensor during movement
+        uint16_t value = adc_read();
+        if(value > 80) {
+            printf("hit Value: %d\n", value); // debug
+            motor->piezo_hit = true;
+            break;
+        }
+
+        sleep_ms(MOTOR_SPEED_DELAY);
     }
 }
-
 
 void calib(program_data *motor) {
 
@@ -80,7 +88,16 @@ void calib(program_data *motor) {
     motor->step_counts = step_counter/3; //lasketaan keskiarvo
 
 
-    run_motor(*motor,110); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
+    run_motor(motor,110); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
 
+}
+// to run once in 30 sec
+void run_motor_30(program_data *motor, int steps) {
+    static uint64_t last_time = 0;
+    uint64_t now = time_us_64();
 
+    if (now - last_time >= 30000000) {
+        run_motor(motor, steps);
+        last_time = now;
+    }
 }
