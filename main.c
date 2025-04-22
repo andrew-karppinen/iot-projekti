@@ -3,6 +3,11 @@
 #include "project.h"
 #include "hardware/adc.h"
 
+
+static  program_data data;
+
+
+
 void init_pins() {
     //kaikki pinnien alustukseen liittyvä tähän
     stdio_init_all();
@@ -22,6 +27,8 @@ void init_pins() {
     gpio_init(PIEZO_SENSOR);
     gpio_pull_up(PIEZO_SENSOR);
 
+    gpio_set_irq_enabled_with_callback(PIEZO_SENSOR, GPIO_IRQ_EDGE_FALL, true, &sensorHit); //keskeytys
+
 
 }
 //käytetään jos piezo ei tunnistanut mitään
@@ -33,14 +40,10 @@ void blink_led(int times, int duration_ms) {
         sleep_ms(duration_ms);
     }
 }
-bool sensorHit(program_data *data) {
 
-    if(!gpio_get(PIEZO_SENSOR)) {
-        data->piezo_hit = true;
-        return true;
-    }
 
-    return false;
+void sensorHit(uint gpio, uint32_t event_mask) {
+    data.piezeo_hit = true;
 }
 
 bool read_button(int button)
@@ -59,11 +62,11 @@ bool read_button(int button)
 int main() {
     init_pins();
     //alustetaan tietorakenne:
-    program_data data;
+
     data.calibrated = false;
     data.current_step = 0;
     data.step_counts = 0;
-    data.piezo_hit = false;
+    data.piezeo_hit = false;
 
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
     bool led_state = false;
@@ -96,15 +99,15 @@ int main() {
             break;
             case 2:
                 //tähän pyöritys 30sec välein ja pilerin tiptumisen tunnistus
-            data.piezo_hit = false;
             run_motor_30(&data); // 30 sek välein pyörii
 
-            if (sensorHit(&data)) {
+            if (data.piezeo_hit) {
                 //tähän mitä tapahtuu kun pilleri tunnistetaan
                 printf("hit!");
+                data.piezeo_hit = false;
             }
 
-            if (!data.piezo_hit) {
+            if (data.piezeo_hit) {
                 //jos pilleriä ei tunnisteta, led vilkkuu 5x
                 // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
                 //blink_led(5, 500);

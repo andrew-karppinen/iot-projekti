@@ -22,12 +22,13 @@
 
 //structi jossa dataa säilytetään, anturien ja moottorien tilatietoja
 typedef  struct {
-    bool piezo_hit;
     bool calibrated;
+    bool piezeo_hit;
     int step_counts; //askelmäärien keskiarvo
     int current_step; //0-7
     int steps_to_move_1; //askelmäärä per luukku: step_counts / 8
 } program_data;
+
 
 
 //funktiomäärittelyt:
@@ -35,5 +36,6 @@ typedef  struct {
 void calib(program_data *motor);
 void run_motor(program_data *motor,int steps);
 void run_motor_30(program_data *motor);
+void sensorHit(uint gpio, uint32_t event_mask);
 
 #endif //PROJECT_H
