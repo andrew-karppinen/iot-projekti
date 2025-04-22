@@ -8,7 +8,6 @@
 #define MOTOR_SPEED_DELAY 1  //moottorin nopeus
 #define FALL_TIME 85 // voidaan käyttää jos tarvitsee. luukulta sensorille kuluva aika
 
-#define PIEZO_SENSITIVITY 80 //piezo sensorin herkkyys
 
 //askelmoottori pinnit:
 #define IN1 2
