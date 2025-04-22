@@ -17,6 +17,8 @@ void init_pins() {
     gpio_pull_up(OPTO_PIN);  // opto fork pull-up
 
     gpio_pull_up(BUTTON);
+    gpio_pull_up(RESET_BUTTON);
+
     gpio_init(IN1); gpio_set_dir(IN1, GPIO_OUT);
     gpio_init(IN2); gpio_set_dir(IN2, GPIO_OUT);
     gpio_init(IN3); gpio_set_dir(IN3, GPIO_OUT);
@@ -67,18 +69,19 @@ bool read_button(int button)
     return true;
 }
 
+void init_data(program_data *data) {
+    data->calibrated = false;
+    data->current_step = 0;
+    data->step_counts = 0;
+    data->piezeo_hit = false;
+    data->pill_counter = 0;
+    data->state = BOOT;
+}
+
 int main() {
     init_pins();
     //alustetaan tietorakenne:
-
-    data.calibrated = false;
-    data.current_step = 0;
-    data.step_counts = 0;
-    data.piezeo_hit = false;
-    data.pill_counter = 0;
-
-    //tilan alustus
-    data.state = BOOT;
+    init_data(&data);
 
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
     bool led_state = false;
@@ -102,6 +105,13 @@ int main() {
 
 
     while (1){
+        if(read_button(RESET_BUTTON)==0){
+            printf("resetointi\n");
+            //resetointi, palautetaan tilatiedot oletusarvoihin
+            init_data(&data);
+            write_status_to_eeprom(data);
+        }
+
         switch (data.state) {
             case 0:
                 while (1) { //odotetaan napin painallusta

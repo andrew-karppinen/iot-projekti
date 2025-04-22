@@ -15,7 +15,8 @@
 #define IN3 6
 #define IN4 13
 
-#define BUTTON 7
+#define BUTTON 7 //kalibrointi, ohjelman aloitus
+#define RESET_BUTTON 8 //resetointi
 #define LED_PIN 20
 #define LED_INTERVAL 200000 //ledin vilkkumisen väli
 
