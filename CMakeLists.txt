@@ -25,7 +25,7 @@ add_compile_options(-Wall
 add_executable(${PROJECT_NAME}
         main.c
         motor.c
-
+        eeprom.c
 )
 
 # Create map/bin/hex/uf2 files

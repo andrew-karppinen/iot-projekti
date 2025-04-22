@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "project.h"
 #include "hardware/adc.h"
+#include "hardware/i2c.h"
 
 
 static  program_data data;
@@ -28,6 +29,13 @@ void init_pins() {
     gpio_pull_up(PIEZO_SENSOR);
 
     gpio_set_irq_enabled_with_callback(PIEZO_SENSOR, GPIO_IRQ_EDGE_FALL, true, &sensorHit); //keskeytys
+
+    //eeprom yhteyden alustus, i2c:
+    i2c_init(I2C_PORT, 100 * 1000); // 100 kHz
+    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA_PIN);
+    gpio_pull_up(I2C_SCL_PIN);
 
 
 }
@@ -67,19 +75,35 @@ int main() {
     data.current_step = 0;
     data.step_counts = 0;
     data.piezeo_hit = false;
+    data.pill_counter = 0;
+
+    //tilan alustus
+    data.state = BOOT;
 
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
     bool led_state = false;
 
-    int state =1;
     /*
-     state 1 = käyttäjän odottaminen, kalibrointi
-     state 2 = dosetin toiminta
+     state 0/BOOT = käyttäjän odottaminen, kalibrointi
+     state 1/PILL = dosetin toiminta
      */
+    if (read_status_from_eeprom(&data)==false){
+        //tilaa ei voitu lukea, asetetaan tilaksi BOOT
+        data.state = BOOT;
+        printf("EEPROM-luku epäonnistui");
+    } else{
+        //tulostetaan tila, debug:
+        printf("state: %d\n", data.state);
+        printf("kalibroitu: %d\n", data.calibrated);
+        printf("askelmäärä: %d\n", data.step_counts);
+        printf("pillerimäärä: %d\n", data.pill_counter);
+    }
+
+
 
     while (1){
-        switch (state) {
-            case 1:
+        switch (data.state) {
+            case 0:
                 while (1) { //odotetaan napin painallusta
                     if (read_button(BUTTON)==0) {
                         break;
@@ -92,29 +116,34 @@ int main() {
                         last_toggle = now;
                     }
                 }
-            calib(&data); //kalibroidaan
-            if (data.calibrated==true) { //varmistetaan että calibrointi onnistui
-                state =2;
-            }
-            break;
-            case 2:
+                calib(&data); //kalibroidaan
+                if (data.calibrated==true) { //varmistetaan että calibrointi onnistui
+                    data.state = PILL; //vaihdetaan tila
+                     write_status_to_eeprom(data); //tallennetaan tila eepromiin
+                }
+                break;
+
+            case 1:
                 //tähän pyöritys 30sec välein ja pilerin tiptumisen tunnistus
-            run_motor_30(&data); // 30 sek välein pyörii
+                if (run_motor_30(&data)) { // 30 sek välein pyörii
+                    data.pill_counter++;
+                    //tallennetaan tila eepromiin
+                    write_status_to_eeprom(data);
+                }
+                if (data.piezeo_hit) {
+                    //tähän mitä tapahtuu kun pilleri tunnistetaan
+                    printf("hit!");
+                    data.piezeo_hit = false;
+                }
 
-            if (data.piezeo_hit) {
-                //tähän mitä tapahtuu kun pilleri tunnistetaan
-                printf("hit!");
-                data.piezeo_hit = false;
-            }
+                if (data.piezeo_hit) {
+                    //jos pilleriä ei tunnisteta, led vilkkuu 5x
+                    // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
+                    //blink_led(5, 500);
+                    sleep_ms(5); // adjusting the piezo sensor checking speed.
+                }
+                break;
+                }
 
-            if (data.piezeo_hit) {
-                //jos pilleriä ei tunnisteta, led vilkkuu 5x
-                // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
-                //blink_led(5, 500);
-                sleep_ms(5); // adjusting the piezo sensor checking speed.
-
-            }
-            break;
-            }
         }
     }

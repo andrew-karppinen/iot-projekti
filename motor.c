@@ -81,19 +81,21 @@ void calib(program_data *motor) {
     motor->calibrated = true;
     motor->step_counts = step_counter/3; //lasketaan keskiarvo
 
-    motor->steps_to_move_1 = motor->step_counts / 8; //askelmäärä per luukku
 
 
     run_motor(motor,110); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
 
 }
 // to run once in 30 sec
-void run_motor_30(program_data *motor) {
+bool run_motor_30(program_data *motor) {
+    //palauttaa true jos moottori liikkui
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
 
     if (now - last_time >= 3000000) {
-        run_motor(motor, motor->steps_to_move_1);
+        run_motor(motor, motor->step_counts / 8);
         last_time = now;
+        return true;
     }
+    return false;
 }
