@@ -39,15 +39,6 @@ void run_motor(program_data *motor, int steps) {
         step_once(motor->current_step);
         motor->current_step++;
 
-        // check sensor during movement
-        if(motor->piezo_hit == false) { //tarkistetaan sensori vain jos ei ole vielä osunut
-
-            uint16_t value = adc_read();
-            if (value > PIEZO_SENSITIVITY) {
-                printf("hit Value: %d\n", value); // debug
-                motor->piezo_hit = true;
-            }
-        }
 
     }
 }
@@ -101,7 +92,7 @@ void run_motor_30(program_data *motor) {
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
 
-    if (now - last_time >= 30000000) {
+    if (now - last_time >= 3000000) {
         run_motor(motor, motor->steps_to_move_1);
         last_time = now;
     }

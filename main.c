@@ -19,10 +19,10 @@ void init_pins() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
 
     //piezo sensor
-    adc_init();
-    adc_set_clkdiv(0);
-    adc_gpio_init(PIEZO_SENSOR);
-    adc_select_input(1);
+    gpio_init(PIEZO_SENSOR);
+    gpio_pull_up(PIEZO_SENSOR);
+
+
 }
 //käytetään jos piezo ei tunnistanut mitään
 void blink_led(int times, int duration_ms) {
@@ -34,11 +34,12 @@ void blink_led(int times, int duration_ms) {
     }
 }
 bool sensorHit(program_data *data) {
-    uint16_t value = adc_read();
-    if (value > PIEZO_SENSITIVITY) {
+
+    if(!gpio_get(PIEZO_SENSOR)) {
         data->piezo_hit = true;
         return true;
     }
+
     return false;
 }
 
@@ -100,6 +101,7 @@ int main() {
 
             if (sensorHit(&data)) {
                 //tähän mitä tapahtuu kun pilleri tunnistetaan
+                printf("hit!");
             }
 
             if (!data.piezo_hit) {
