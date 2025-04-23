@@ -16,7 +16,7 @@
 #define IN4 13
 
 #define BUTTON 7 //kalibrointi, ohjelman aloitus
-#define RESET_BUTTON 8 //resetointi
+#define RESET_BUTTON 8 //resetointi, eepromin alustus
 #define LED_PIN 20
 #define LED_INTERVAL 200000 //ledin vilkkumisen väli
 
@@ -26,7 +26,6 @@
 #define I2C_SCL_PIN 17
 #define EEPROM_ADDR 0x50
 
-//tilan osoite, seuraava muistipaikka käytetään käänteiselle tilalle, joten sen oltava saatavilla
 #define EEPROM_STATE_ADDR 0x0002
 
 
@@ -58,7 +57,6 @@ typedef  struct {
     int current_step; //0-7
     int pill_counter; //annettujen lääkkeiden määrä
     State state; //tilatieto
-
 } program_data;
 
 
