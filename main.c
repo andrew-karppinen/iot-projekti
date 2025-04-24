@@ -114,7 +114,7 @@ int main() {
             }
             printf("LoRa ready\n");
 
-            // odotetaan käyttäjää
+            //odotetaan käyttäjää
             while (read_button(BUTTON)) {
                 uint64_t now = time_us_64();
                 if (now - last_toggle >= LED_INTERVAL) {
