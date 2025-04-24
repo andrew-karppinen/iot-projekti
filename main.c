@@ -121,11 +121,17 @@ int main() {
             write_status_to_eeprom(data);
         }
 
-        // Tällä hetkellä vaatii lora yhteyden kalibroinnin aloittamiseen
+        //Aloittaa kalibroinnin ja pillereiden jaon vaikka ei olisi lora yhteyttä
         switch (data.state) {
             case BOOT:
                 printf("Connecting to Lora...\n");
                     init_lora();
+            calib(&data);
+            if (data.calibrated) {
+                data.state = PILL;
+                write_status_to_eeprom(data);
+                sen_lora_msg("Calibrated");
+            }
             // Ping
             if (!ping_lora()) {
                 printf("LoRa ping failed\n");
@@ -136,14 +142,14 @@ int main() {
                 printf("LoRa configure failed\n");
                 break;
             }
-            // Join
+            //Join
             if (!join_lora()) {
                 printf("LoRa join failed\n");
                 break;
             }
             printf("LoRa ready\n");
 
-            // odotetaan käyttäjää
+            //odotetaan käyttäjää
             while (read_button(BUTTON)) {
                 uint64_t now = time_us_64();
                 if (now - last_toggle >= LED_INTERVAL) {
@@ -151,12 +157,6 @@ int main() {
                     gpio_put(LED_PIN, led_state);
                     last_toggle = now;
                 }
-            }
-            calib(&data);
-            if (data.calibrated) {
-                data.state = PILL;
-                write_status_to_eeprom(data);
-                sen_lora_msg("Calibrated");
             }
             break;
 
