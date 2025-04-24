@@ -3,11 +3,11 @@
 #include "project.h"
 #include "hardware/adc.h"
 #include "hardware/i2c.h"
-
+#include "hardware/sync.h"
 
 static  program_data data;
 
-
+static uint64_t last_hit_time = 0;
 
 void init_pins() {
     //kaikki pinnien alustukseen liittyvä tähän
@@ -32,13 +32,7 @@ void init_pins() {
 
     gpio_set_irq_enabled_with_callback(PIEZO_SENSOR, GPIO_IRQ_EDGE_FALL, true, &sensorHit); //keskeytys
 
-    //eeprom yhteyden alustus, i2c:
-    i2c_init(I2C_PORT, 100 * 1000); // 100 kHz
-    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(I2C_SDA_PIN);
-    gpio_pull_up(I2C_SCL_PIN);
-
+    init_eeprom();
 
 }
 //käytetään jos piezo ei tunnistanut mitään
@@ -50,10 +44,19 @@ void blink_led(int times, int duration_ms) {
         sleep_ms(duration_ms);
     }
 }
+static inline bool are_interrupts_enabled(void) { //kertoo onko keskeytykset päällä
+    uint32_t primask;
+    __asm volatile ("MRS %0, primask" : "=r" (primask) );
+    return (primask == 0);
+}
 
 
-void sensorHit(uint gpio, uint32_t event_mask) {
-    data.piezeo_hit = true;
+void sensorHit(uint gpio, uint32_t events) {
+    uint64_t now = time_us_64();
+    if (now - last_hit_time > 200000) { // 10ms debounce
+        data.piezeo_hit = true;
+        last_hit_time = now;
+    }
 }
 
 bool read_button(int button)
@@ -84,6 +87,7 @@ int main() {
     init_data(&data);
 
     uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
+    uint_fast64_t last_piezo_hit = time_us_64();
     bool led_state = false;
 
     /*
@@ -137,20 +141,19 @@ int main() {
                 //tähän pyöritys 30sec välein ja pilerin tiptumisen tunnistus
                 if (run_motor_30(&data)) { // 30 sek välein pyörii
                     data.pill_counter++;
-                    //tallennetaan tila eepromiin
+                    //tallennetaan tilatiedot eepromiin
                     write_status_to_eeprom(data);
                 }
-                if (data.piezeo_hit) {
-                    //tähän mitä tapahtuu kun pilleri tunnistetaan
-                    printf("hit!");
-                    data.piezeo_hit = false;
-                }
+
 
                 if (data.piezeo_hit) {
                     //jos pilleriä ei tunnisteta, led vilkkuu 5x
                     // korjataan. blink led blokkaa nyt piezo sensorin jatkuvan seuraamisen
                     //blink_led(5, 500);
-                    sleep_ms(5); // adjusting the piezo sensor checking speed.
+                    printf("hit");
+
+                    data.piezeo_hit = false;
+
                 }
                 break;
                 }

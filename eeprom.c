@@ -16,11 +16,20 @@
 
  */
 
+
+void init_eeprom() {
+    //eeprom yhteyden alustus, i2c:
+    i2c_init(I2C_PORT, 100 * 1000); // 100 kHz
+    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA_PIN);
+    gpio_pull_up(I2C_SCL_PIN);
+}
+
 void write_status_to_eeprom(program_data state)
 {
 
     uint8_t buffer[8];
-
 
     buffer[0] = (EEPROM_STATE_ADDR >> 8) & 0xFF; // MSB
     buffer[1] = EEPROM_STATE_ADDR & 0xFF;        // LSB
@@ -40,6 +49,7 @@ void write_status_to_eeprom(program_data state)
     if (ret < 0) {
         printf("EEPROM-kirjoitus epäonnistui\n");
     }
+
     sleep_ms(20);
 }
 
