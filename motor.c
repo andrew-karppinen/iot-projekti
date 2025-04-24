@@ -92,7 +92,7 @@ bool run_motor_30(program_data *motor) {
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
 
-    if (now - last_time >= 3000000) {
+    if (now - last_time >= 30000000) {
         run_motor(motor, motor->step_counts / 8);
         last_time = now;
         return true;
