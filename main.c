@@ -92,7 +92,7 @@ int main() {
             write_status_to_eeprom(data);
         }
 
-        // Tällä hetkellä vaatii lora yhteyden kalibroinnin aloittamiseen
+        //Tällä hetkellä vaatii lora yhteyden kalibroinnin aloittamiseen
         switch (data.state) {
             case BOOT:
                 printf("Connecting to Lora...\n");
