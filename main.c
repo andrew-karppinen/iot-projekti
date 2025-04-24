@@ -81,7 +81,7 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
-        data.state = BOOT; //siirtyy boot osioon
+        data.state = BOOT; //siirtyy boot osioon suoraan
     }
 
     while (1) {
