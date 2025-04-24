@@ -61,14 +61,33 @@ void init_data(program_data *data) {
 
 int main() {
     init_pins();
-
+    //alustetaan tietorakenne
     init_data(&data);
 
     uint64_t last_toggle = time_us_64();
     bool led_state = false;
+
+    /*
+      state 0/BOOT = käyttäjän odottaminen, kalibrointi
+      state 1/PILL = dosetin toiminta
+      */
+    if (read_status_from_eeprom(&data)==false){
+        //tilaa ei voitu lukea, asetetaan tilaksi BOOT
+        data.state = BOOT;
+        printf("EEPROM-luku epäonnistui");
+    } else{
+        //tulostetaan tila, debug:
+        printf("state: %d\n", data.state);
+        printf("kalibroitu: %d\n", data.calibrated);
+        printf("askelmäärä: %d\n", data.step_counts);
+        printf("pillerimäärä: %d\n", data.pill_counter);
+        data.state = BOOT; //siirtyy boot osioon
+    }
+
     while (1) {
         if (!read_button(RESET_BUTTON)) {
             printf("resetointi\n");
+            //resetointi, palautetaan tilatiedot oletusarvoihin
             init_data(&data);
             write_status_to_eeprom(data);
         }
