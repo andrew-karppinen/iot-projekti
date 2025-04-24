@@ -95,8 +95,18 @@ int main() {
         //Aloittaa kalibroinnin ja pillereiden jaon vaikka ei olisi lora yhteyttä
         switch (data.state) {
             case BOOT:
-                printf("Connecting to Lora...\n");
+                printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
                     init_lora();
+                    data.pill_counter = 0; // laitetaan nollaksi aina ohjelman alussa
+            //odotetaan käyttäjää
+            while (read_button(BUTTON)) {
+                uint64_t now = time_us_64();
+                if (now - last_toggle >= LED_INTERVAL) {
+                    led_state = !led_state;
+                    gpio_put(LED_PIN, led_state);
+                    last_toggle = now;
+                }
+            }
             calib(&data);
             if (data.calibrated) {
                 data.state = PILL;
@@ -119,16 +129,6 @@ int main() {
                 break;
             }
             printf("LoRa ready\n");
-
-            //odotetaan käyttäjää
-            while (read_button(BUTTON)) {
-                uint64_t now = time_us_64();
-                if (now - last_toggle >= LED_INTERVAL) {
-                    led_state = !led_state;
-                    gpio_put(LED_PIN, led_state);
-                    last_toggle = now;
-                }
-            }
             break;
 
             case PILL: {
