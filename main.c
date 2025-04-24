@@ -136,7 +136,7 @@ int main() {
                 printf("LoRa configure failed\n");
                 break;
             }
-            // Join
+            //Join
             if (!join_lora()) {
                 printf("LoRa join failed\n");
                 break;
