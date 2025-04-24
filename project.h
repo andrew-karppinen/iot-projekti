@@ -1,4 +1,3 @@
-
 #ifndef PROJECT_H
 #define PROJECT_H
 
@@ -7,6 +6,7 @@
 
 #define MOTOR_SPEED_DELAY 1  //moottorin nopeus
 #define FALL_TIME 85 // voidaan käyttää jos tarvitsee. luukulta sensorille kuluva aika
+
 
 //askelmoottori pinnit:
 #define IN1 2
@@ -27,7 +27,11 @@
 
 #define EEPROM_STATE_ADDR 0x0002
 
-
+//lora
+#define UART_ID uart1
+#define BAUD_RATE 9600
+#define UART_TX_PIN 4
+#define UART_RX_PIN 5
 
 /*
 //tallennetaan myös moottorin kalibrointi ym tiedot eepromiin
@@ -71,7 +75,10 @@ void sensorHit(uint gpio, uint32_t event_mask);
 void write_status_to_eeprom(program_data state);
 bool read_status_from_eeprom(program_data* state);
 
-void init_eeprom();
-
+void     init_lora(void);
+bool     ping_lora(void);
+bool     configure_lora(void);
+bool     join_lora(void);
+void     sen_lora_msg(const char *msg);
 
 #endif //PROJECT_H

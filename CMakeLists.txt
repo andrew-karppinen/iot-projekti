@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
         main.c
         motor.c
         eeprom.c
+        lora.c
 )
 
 # Create map/bin/hex/uf2 files
