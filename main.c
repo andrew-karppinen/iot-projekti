@@ -81,8 +81,8 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
-        data.state = BOOT; //siirtyy boot osioon suoraan
     }
+
 
     while (1) {
         if (!read_button(RESET_BUTTON)) {
@@ -92,44 +92,44 @@ int main() {
             write_status_to_eeprom(data);
         }
 
-        //Aloittaa kalibroinnin ja pillereiden jaon vaikka ei olisi lora yhteyttä
         switch (data.state) {
-            case BOOT:
+            case BOOT:{
                 printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
                     init_lora();
                     data.pill_counter = 0; // laitetaan nollaksi aina ohjelman alussa
-            //odotetaan käyttäjää
-            while (read_button(BUTTON)) {
-                uint64_t now = time_us_64();
-                if (now - last_toggle >= LED_INTERVAL) {
-                    led_state = !led_state;
-                    gpio_put(LED_PIN, led_state);
-                    last_toggle = now;
+                //odotetaan käyttäjää
+                while (read_button(BUTTON)) {
+                    uint64_t now = time_us_64();
+                    if (now - last_toggle >= LED_INTERVAL) {
+                        led_state = !led_state;
+                        gpio_put(LED_PIN, led_state);
+                        last_toggle = now;
+                    }
                 }
-            }
-            calib(&data);
-            if (data.calibrated) {
-                data.state = PILL;
-                write_status_to_eeprom(data);
-                sen_lora_msg("Calibrated");
-            }
-            // Ping
-            if (!ping_lora()) {
-                printf("LoRa ping failed\n");
+                calib(&data);
+                if (data.calibrated) {
+                    data.state = PILL;
+                    write_status_to_eeprom(data);
+                    sen_lora_msg("Calibrated");
+                }
+                // Ping
+                if (!ping_lora()) {
+                    printf("LoRa ping failed\n");
+                    break;
+                }
+                //Configure
+                if (!configure_lora()) {
+                    printf("LoRa configure failed\n");
+                    break;
+                }
+                //Join
+                if (!join_lora()) {
+                    printf("LoRa join failed\n");
+                    break;
+                }
+                printf("LoRa ready\n");
                 break;
             }
-            //Configure
-            if (!configure_lora()) {
-                printf("LoRa configure failed\n");
-                break;
-            }
-            //Join
-            if (!join_lora()) {
-                printf("LoRa join failed\n");
-                break;
-            }
-            printf("LoRa ready\n");
-            break;
 
             case PILL: {
                 static uint64_t last_motor_time = 0;
