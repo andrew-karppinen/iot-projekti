@@ -3,11 +3,8 @@
 #include "project.h"
 #include "hardware/adc.h"
 #include "hardware/i2c.h"
-#include "hardware/sync.h"
 
-static  program_data data;
-
-static uint64_t last_hit_time = 0;
+static program_data data;
 
 void init_pins() {
     // kaikki pinnien alustukseen liittyvä tähän
@@ -37,35 +34,10 @@ void init_pins() {
     gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(I2C_SDA_PIN);
     gpio_pull_up(I2C_SCL_PIN);
-  
-    gpio_set_irq_enabled_with_callback(PIEZO_SENSOR, GPIO_IRQ_EDGE_FALL, true, &sensorHit); //keskeytys
-
-    init_eeprom();
-
-}
-//käytetään jos piezo ei tunnistanut mitään
-void blink_led(int times, int duration_ms) {
-    for (int i = 0; i < times; i++) {
-        gpio_put(LED_PIN, 1);
-        sleep_ms(duration_ms);
-        gpio_put(LED_PIN, 0);
-        sleep_ms(duration_ms);
-    }
-}
-static inline bool are_interrupts_enabled(void) { //kertoo onko keskeytykset päällä
-    uint32_t primask;
-    __asm volatile ("MRS %0, primask" : "=r" (primask) );
-    return (primask == 0);
 }
 
-
-
-void sensorHit(uint gpio, uint32_t events) {
-    uint64_t now = time_us_64();
-    if (now - last_hit_time > 200000) { // 10ms debounce
-        data.piezeo_hit = true;
-        last_hit_time = now;
-    }
+void sensorHit(uint gpio, uint32_t event_mask) {
+    data.piezeo_hit = true;
 }
 
 bool read_button(int button) {
@@ -92,8 +64,7 @@ int main() {
     //alustetaan tietorakenne
     init_data(&data);
 
-    uint64_t last_toggle = time_us_64();  // nykyinen aika mikrosekunteina
-    uint_fast64_t last_piezo_hit = time_us_64();
+    uint64_t last_toggle = time_us_64();
     bool led_state = false;
 
     /*
@@ -110,8 +81,8 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
-        data.state = BOOT; //siirtyy boot osioon suoraan
     }
+
 
     while (1) {
         if (!read_button(RESET_BUTTON)) {
@@ -121,44 +92,44 @@ int main() {
             write_status_to_eeprom(data);
         }
 
-        //Aloittaa kalibroinnin ja pillereiden jaon vaikka ei olisi lora yhteyttä
         switch (data.state) {
-            case BOOT:
+            case BOOT:{
                 printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
                     init_lora();
                     data.pill_counter = 0; // laitetaan nollaksi aina ohjelman alussa
-            //odotetaan käyttäjää
-            while (read_button(BUTTON)) {
-                uint64_t now = time_us_64();
-                if (now - last_toggle >= LED_INTERVAL) {
-                    led_state = !led_state;
-                    gpio_put(LED_PIN, led_state);
-                    last_toggle = now;
+                //odotetaan käyttäjää
+                while (read_button(BUTTON)) {
+                    uint64_t now = time_us_64();
+                    if (now - last_toggle >= LED_INTERVAL) {
+                        led_state = !led_state;
+                        gpio_put(LED_PIN, led_state);
+                        last_toggle = now;
+                    }
                 }
-            }
-            calib(&data);
-            if (data.calibrated) {
-                data.state = PILL;
-                write_status_to_eeprom(data);
-                sen_lora_msg("Calibrated");
-            }
-            // Ping
-            if (!ping_lora()) {
-                printf("LoRa ping failed\n");
+                calib(&data);
+                if (data.calibrated) {
+                    data.state = PILL;
+                    write_status_to_eeprom(data);
+                    sen_lora_msg("Calibrated");
+                }
+                // Ping
+                if (!ping_lora()) {
+                    printf("LoRa ping failed\n");
+                    break;
+                }
+                //Configure
+                if (!configure_lora()) {
+                    printf("LoRa configure failed\n");
+                    break;
+                }
+                //Join
+                if (!join_lora()) {
+                    printf("LoRa join failed\n");
+                    break;
+                }
+                printf("LoRa ready\n");
                 break;
             }
-            //Configure
-            if (!configure_lora()) {
-                printf("LoRa configure failed\n");
-                break;
-            }
-            //Join
-            if (!join_lora()) {
-                printf("LoRa join failed\n");
-                break;
-            }
-            printf("LoRa ready\n");
-            break;
 
             case PILL: {
                 static uint64_t last_motor_time = 0;
@@ -169,8 +140,6 @@ int main() {
                 // moottori
                 if (run_motor_30(&data)) {
                     data.pill_counter++;
-
-                    //tallennetaan tilatiedot eepromiin
                     write_status_to_eeprom(data);
 
                     char buf[32];
@@ -180,7 +149,6 @@ int main() {
                     last_motor_time = now;
                     no_pill_sent = false;
                 }
-
 
                 // Ei tällä hetkellä jostain syystä lähetä pilleri tunnistetty viestiä vaikka piezo sen tunnistaa
                 // Pill detected
@@ -199,7 +167,6 @@ int main() {
                     snprintf(buffer, sizeof(buffer), "No pill detected from lokero: %d", data.pill_counter);
                     sen_lora_msg(buffer);
                     no_pill_sent = true;
-
                 }
 
                 break;

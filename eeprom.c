@@ -39,7 +39,7 @@ void write_status_to_eeprom(program_data state)
     buffer[3] = state.calibrated ? 0x01 : 0x00;               // tavu 1: calibroitu
     buffer[4] = (state.step_counts >> 8) & 0xFF;              // tavu 2: step_counts MSB
     buffer[5] = state.step_counts & 0xFF;                     // tavu 3: step_counts LSB
-    buffer[6] = (uint8_t)state.current_step;                  // tavu 4: pill_counter
+    buffer[6] = (uint8_t)state.pill_counter;                  // tavu 4: pill_counter
 
     // Tarkistussumma yksinkertaisena XOR:na kaikista edellisistä kentistä (tavuista 2–6)
     buffer[7] = buffer[2] ^ buffer[3] ^ buffer[4] ^ buffer[5] ^ buffer[6]; // tavu 5: tarkistussumma
