@@ -56,6 +56,7 @@ typedef  enum {
 typedef  struct {
     bool calibrated;
     bool piezeo_hit;
+    bool lora_connected;
     int step_counts; //askelmäärien keskiarvo
     int current_step; //0-7
     int pill_counter; //annettujen lääkkeiden määrä
@@ -78,10 +79,7 @@ void init_eeprom();
 void write_status_to_eeprom(program_data state);
 bool read_status_from_eeprom(program_data* state);
 
-void     init_lora(void);
-bool     ping_lora(void);
-bool     configure_lora(void);
-bool     join_lora(void);
-void     sen_lora_msg(const char *msg);
+bool set_up_lora();
+void sen_lora_msg(const char *msg);
 
 #endif //PROJECT_H

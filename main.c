@@ -63,6 +63,17 @@ int main() {
     uint64_t last_toggle = time_us_64();
     bool led_state = false;
 
+    //lora:
+    printf("Yritetään lora yhteyttä...\n");
+    if (set_up_lora()) {
+        data.lora_connected = true;
+        sen_lora_msg("Connected to Lorawan");
+        printf("Lorawan yhteys luotu\n");
+    } else {
+        data.lora_connected = false;
+        printf("Error lorawan yhteyden luonnissa, yritettiin 2 kertaa\n");
+    }
+
     /*
       state 0/BOOT = käyttäjän odottaminen, kalibrointi
       state 1/PILL = dosetin toiminta
@@ -86,12 +97,14 @@ int main() {
             //resetointi, palautetaan tilatiedot oletusarvoihin
             init_data(&data);
             write_status_to_eeprom(data);
+            if (data.lora_connected) {
+                sen_lora_msg("Reset");
+            }
         }
 
         switch (data.state) {
             case BOOT:{
-                printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
-                    init_lora();
+                printf("Paina nappia niin alkaa kalibrointi\n");
 
                 init_data(&data);
                 //odotetaan käyttäjää
@@ -107,25 +120,11 @@ int main() {
                 if (data.calibrated) {
                     data.state = PILL;
                     write_status_to_eeprom(data);
-                    sen_lora_msg("Calibrated");
-                }
-                // Ping
-                if (!ping_lora()) {
-                    printf("LoRa ping failed\n");
+                    if (data.lora_connected) {
+                        sen_lora_msg("Calibrated");
+                    }
                     break;
                 }
-                //Configure
-                if (!configure_lora()) {
-                    printf("LoRa configure failed\n");
-                    break;
-                }
-                //Join
-                if (!join_lora()) {
-                    printf("LoRa join failed\n");
-                    break;
-                }
-                printf("LoRa ready\n");
-                break;
             }
 
             case PILL: {
@@ -137,25 +136,29 @@ int main() {
                 // moottori
                 if (run_motor_30(&data)) {
                     data.pill_counter++;
+                    /*
                     if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
+                        sen_lora_msg("Dosetti tyhja!");
+                        printf("Dosetissa\n");
                         data.state = BOOT;
                     }
-
+                    */
 
                     write_status_to_eeprom(data);
 
                     char buf[32];
                     snprintf(buf, sizeof(buf), "Current lokero:%d", data.pill_counter);
-                    sen_lora_msg(buf);
+                    if (data.lora_connected) {
+                        sen_lora_msg(buf);
+                    }
 
                     last_motor_time = now;
                     no_pill_sent = false;
                 }
 
-                // Ei tällä hetkellä jostain syystä lähetä pilleri tunnistetty viestiä vaikka piezo sen tunnistaa
-                // Pill detected
+                // Pilleri tunnistetaan = lähetetään tieto loraan
                 if (data.piezeo_hit) {
-                    char buffer[32];
+                    char buffer[64];
                     snprintf(buffer, sizeof(buffer), "Pill detected from lokero: %d", data.pill_counter);
                     sen_lora_msg(buffer);
                     printf("hit!\n");
@@ -165,12 +168,19 @@ int main() {
 
                 // jos pilleriä ei tunnisteta 10 sekunnin sisällä lähetetään viesti
                 if (!data.piezeo_hit && !no_pill_sent && (now - last_motor_time > 10 * 1000 * 1000)) {
-                    char buffer[32];
+                    char buffer[64];
                     snprintf(buffer, sizeof(buffer), "No pill detected from lokero: %d", data.pill_counter);
-                    sen_lora_msg(buffer);
+                    if (data.lora_connected) {
+                        sen_lora_msg(buffer);
+                    }
                     no_pill_sent = true;
                 }
-
+                //siirretty tänne jotta lähettää dosetti tyhjä viimeisenä viestinä. "current lokero x" jälkeen
+                if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
+                    sen_lora_msg("Dosetti tyhja!");
+                    printf("Dosetti tyhja viesti lahetetty\n");
+                    data.state = BOOT;
+                }
                 break;
             }
         }
