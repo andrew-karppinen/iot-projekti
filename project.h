@@ -67,11 +67,14 @@ typedef  struct {
 
 //funktiomäärittelyt:
 void calib(program_data *motor);
+void recalib(program_data *motor); //peruutetaan optosensorille asti ja sitten takas siihen luukulle missä oltiin
+
 void run_motor(program_data *motor,int steps);
 bool run_motor_30(program_data *motor);
 void sensorHit(uint gpio, uint32_t event_mask);
 
 //eeprom:
+void init_eeprom();
 void write_status_to_eeprom(program_data state);
 bool read_status_from_eeprom(program_data* state);
 
