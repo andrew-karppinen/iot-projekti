@@ -88,6 +88,9 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
+        if(data.state != BOOT) {
+            recalib(&data);
+        }
     }
 
 
@@ -107,6 +110,10 @@ int main() {
                 printf("Paina nappia niin alkaa kalibrointi\n");
 
                 init_data(&data);
+                calib(&data);
+                printf("Paina nappia niin ohjelma alkaa\n");
+
+
                 //odotetaan käyttäjää
                 while (read_button(BUTTON)) {
                     uint64_t now = time_us_64();
@@ -116,7 +123,6 @@ int main() {
                         last_toggle = now;
                     }
                 }
-                calib(&data);
                 if (data.calibrated) {
                     data.state = PILL;
                     write_status_to_eeprom(data);
@@ -136,13 +142,7 @@ int main() {
                 // moottori
                 if (run_motor_30(&data)) {
                     data.pill_counter++;
-                    /*
-                    if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
-                        sen_lora_msg("Dosetti tyhja!");
-                        printf("Dosetissa\n");
-                        data.state = BOOT;
-                    }
-                    */
+
 
                     write_status_to_eeprom(data);
 
