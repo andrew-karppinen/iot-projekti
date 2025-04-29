@@ -29,11 +29,7 @@ void init_pins() {
     gpio_set_irq_enabled_with_callback(PIEZO_SENSOR, GPIO_IRQ_EDGE_FALL, true, &sensorHit);
 
     // eeprom yhteyden alustus, i2c:
-    i2c_init(I2C_PORT, 100 * 1000); // 100 kHz
-    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(I2C_SDA_PIN);
-    gpio_pull_up(I2C_SCL_PIN);
+    init_eeprom();
 }
 
 void sensorHit(uint gpio, uint32_t event_mask) {
@@ -96,7 +92,8 @@ int main() {
             case BOOT:{
                 printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
                     init_lora();
-                    data.pill_counter = 0; // laitetaan nollaksi aina ohjelman alussa
+
+                init_data(&data);
                 //odotetaan käyttäjää
                 while (read_button(BUTTON)) {
                     uint64_t now = time_us_64();
@@ -140,6 +137,11 @@ int main() {
                 // moottori
                 if (run_motor_30(&data)) {
                     data.pill_counter++;
+                    if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
+                        data.state = BOOT;
+                    }
+
+
                     write_status_to_eeprom(data);
 
                     char buf[32];
