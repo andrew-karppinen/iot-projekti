@@ -77,8 +77,10 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
+        if(data.state != BOOT) {
+            recalib(&data);
+        }
     }
-
 
     while (1) {
         if (!read_button(RESET_BUTTON)) {
@@ -88,12 +90,18 @@ int main() {
             write_status_to_eeprom(data);
         }
 
+
+
         switch (data.state) {
             case BOOT:{
-                printf("Paina nappia niin alkaa kalibrointi ja lora yhteyden muodostus...\n");
-                    init_lora();
+
+                init_lora();
 
                 init_data(&data);
+                calib(&data);
+                printf("Paina nappia niin ohjelma alkaa\n");
+
+
                 //odotetaan käyttäjää
                 while (read_button(BUTTON)) {
                     uint64_t now = time_us_64();
@@ -103,13 +111,12 @@ int main() {
                         last_toggle = now;
                     }
                 }
-                calib(&data);
                 if (data.calibrated) {
                     data.state = PILL;
                     write_status_to_eeprom(data);
                     sen_lora_msg("Calibrated");
                 }
-                // Ping
+                //Ping
                 if (!ping_lora()) {
                     printf("LoRa ping failed\n");
                     break;
@@ -136,9 +143,10 @@ int main() {
 
                 // moottori
                 if (run_motor_30(&data)) {
-                    data.pill_counter++;
                     if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
                         data.state = BOOT;
+                        printf("Dosetti tyhjä");
+                        sleep_ms(10000);
                     }
 
 

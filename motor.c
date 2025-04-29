@@ -23,23 +23,43 @@ void step_once(int step_index) {
     gpio_put(IN4, halfstep_sequence[step_index][3]);
 }
 
-void run_motor(program_data *motor, int steps) {
-    if(motor->calibrated == false) {
+
+void run_motor(program_data *motor, int steps, bool direction) {
+    /*
+    0 = normipyöritys myötäpäivään
+    1 = vastapäivään
+     */
+    if (!motor->calibrated) {
+        printf("Not calibrated\n");
+        return;
+    }
+
+    for (int i = 0; i < steps; i++) {
+        sleep_ms(MOTOR_SPEED_DELAY);
+        motor->current_step = (motor->current_step + (direction ? -1 : 1) + 8) % 8;
+        step_once(motor->current_step);
+        printf("Step %d done\n", motor->current_step);
+    }
+}
+
+void recalib(program_data *motor) {
+    if (motor->calibrated == false) {
         printf("No calibrated\n");
         return;
     }
 
-    for(int i = 0; i < steps; i++) {
-        sleep_ms(MOTOR_SPEED_DELAY);
+    bool status= gpio_get(OPTO_PIN);
+    bool new_status;
+    while (1) { //pyöritetään moottoria asekel kerralla ja tarkistetaan optosensorin tila
+        run_motor(motor,1,1);
 
-        if(motor->current_step == 8) {
-            motor->current_step = 0;
+        new_status = gpio_get(OPTO_PIN);
+
+        if(status != new_status ){  //tilanmuuts havaittu
+            run_motor(motor,110,1);
+            run_motor(motor,motor->step_counts/8*(motor->pill_counter),0);
+            return;
         }
-
-        step_once(motor->current_step);
-        motor->current_step++;
-
-
     }
 }
 
@@ -58,7 +78,6 @@ void calib(program_data *motor) {
             i=0;
         }
 
-
         step_once(i);
         sleep_ms(MOTOR_SPEED_DELAY);
         if(counter>0) { //ekalta kierrokselta ei lasketa
@@ -66,7 +85,7 @@ void calib(program_data *motor) {
         }
         new_status = gpio_get(OPTO_PIN);
 
-        if(status ==1  && new_status==0){  //tilanmuuts 1--->0 havaittu
+        if(status == 1  && new_status==0){  //tilanmuuts 1--->0 havaittu
             counter++;
         }
         status = new_status;  // Päivitetään status
@@ -83,17 +102,19 @@ void calib(program_data *motor) {
 
 
 
-    run_motor(motor,110); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
-
+    run_motor(motor,110,0); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
 }
+
 // to run once in 30 sec
 bool run_motor_30(program_data *motor) {
     //palauttaa true jos moottori liikkui
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
 
-    if (now - last_time >= 30000000) {
-        run_motor(motor, motor->step_counts / 8);
+    if (now - last_time >= 10000000) {
+        motor->pill_counter++;
+        write_status_to_eeprom(*motor);
+        run_motor(motor, motor->step_counts / 8,0);
         last_time = now;
         return true;
     }
