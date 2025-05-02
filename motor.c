@@ -111,9 +111,12 @@ bool run_motor_30(program_data *motor) {
     uint64_t now = time_us_64();
 
     if (now - last_time >= 10000000) {
+        motor->motor_running = true;
         write_status_to_eeprom(*motor);
         run_motor(motor, motor->step_counts / 8,0);
         last_time = now;
+        motor->motor_running = false;
+        write_status_to_eeprom(*motor);
         return true;
     }
     return false;
