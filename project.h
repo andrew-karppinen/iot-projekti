@@ -33,16 +33,6 @@
 #define UART_TX_PIN 4
 #define UART_RX_PIN 5
 
-/*
-//tallennetaan myös moottorin kalibrointi ym tiedot eepromiin
- EEPROM DATA STRUCT:
- tavut 0, dosetin tila, (uint 8)
- tavut 1, calibroitu, boolean, 0x00, tai 0x01
- tavut 2-3, 2 tavua step_counts (uint_16)
- tavu 4, pill_counter (uint 8)
- tavu 5, tarkistussumma uint_8 //tietojen oikeellisuuden tarkistamiseen
-
- */
 
 typedef  enum {
     BOOT =0x00,
@@ -60,6 +50,7 @@ typedef  struct {
     int step_counts; //askelmäärien keskiarvo
     int current_step; //0-7
     int pill_counter; //annettujen lääkkeiden määrä
+    bool motor_running; //onko moottori pyörimäss, hyödynnetään jotta tiedetään pyörikö moottori virrankatkaisun aikana
     State state; //tilatieto
 } program_data;
 

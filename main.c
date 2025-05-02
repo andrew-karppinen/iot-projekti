@@ -53,6 +53,7 @@ void init_data(program_data *data) {
     data->piezeo_hit = false;
     data->pill_counter = 0;
     data->state = BOOT;
+    data->motor_running = false;
 }
 
 int main() {
@@ -88,8 +89,11 @@ int main() {
         printf("kalibroitu: %d\n", data.calibrated);
         printf("askelmäärä: %d\n", data.step_counts);
         printf("pillerimäärä: %d\n", data.pill_counter);
+        printf("moottori pyöri kun sammutettiin: %d\n",data.motor_running);
         if(data.state != BOOT) {
-            recalib(&data);
+            if (data.motor_running==true) {
+                recalib(&data);
+            }
         }
     }
 
@@ -109,6 +113,7 @@ int main() {
             case BOOT:{
 
                 init_data(&data);
+                write_status_to_eeprom(data); //päivitetään status eepromiin
                 calib(&data);
                 printf("Paina nappia niin ohjelma alkaa\n");
 
