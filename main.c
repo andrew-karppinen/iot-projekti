@@ -107,7 +107,6 @@ int main() {
 
         switch (data.state) {
             case BOOT:{
-                printf("Paina nappia niin alkaa kalibrointi\n");
 
                 init_data(&data);
                 calib(&data);
@@ -142,7 +141,6 @@ int main() {
                 // moottori
                 if (run_motor_30(&data)) {
                     data.pill_counter++;
-
 
                     write_status_to_eeprom(data);
 

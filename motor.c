@@ -38,7 +38,6 @@ void run_motor(program_data *motor, int steps, bool direction) {
         sleep_ms(MOTOR_SPEED_DELAY);
         motor->current_step = (motor->current_step + (direction ? -1 : 1) + 8) % 8;
         step_once(motor->current_step);
-        printf("Step %d done\n", motor->current_step);
     }
 }
 
@@ -112,7 +111,6 @@ bool run_motor_30(program_data *motor) {
     uint64_t now = time_us_64();
 
     if (now - last_time >= 10000000) {
-        motor->pill_counter++;
         write_status_to_eeprom(*motor);
         run_motor(motor, motor->step_counts / 8,0);
         last_time = now;
