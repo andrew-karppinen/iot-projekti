@@ -82,7 +82,7 @@ int main() {
     if (read_status_from_eeprom(&data)==false){
         //tilaa ei voitu lukea, asetetaan tilaksi BOOT
         data.state = BOOT;
-        printf("EEPROM-luku epäonnistui");
+        printf("EEPROM-luku epäonnistui\n");
     } else{
         //tulostetaan tila, debug:
         printf("state: %d\n", data.state);
@@ -112,13 +112,24 @@ int main() {
         switch (data.state) {
             case BOOT:{
 
+                //odotetaan käyttäjää, kalibrointi alkaa
+                printf("Paina nappia\n");
+                while (read_button(BUTTON)) {
+                    uint64_t now = time_us_64();
+                    if (now - last_toggle >= LED_INTERVAL) {
+                        led_state = !led_state;
+                        gpio_put(LED_PIN, led_state);
+                        last_toggle = now;
+                    }
+                }
+
                 init_data(&data);
                 write_status_to_eeprom(data); //päivitetään status eepromiin
                 calib(&data);
-                printf("Paina nappia niin ohjelma alkaa\n");
+                printf("Paina nappia\n");
 
 
-                //odotetaan käyttäjää
+                //odotetaan käyttäjää, pillereiden jako alkaa
                 while (read_button(BUTTON)) {
                     uint64_t now = time_us_64();
                     if (now - last_toggle >= LED_INTERVAL) {
