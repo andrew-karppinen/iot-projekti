@@ -36,6 +36,15 @@ void sensorHit(uint gpio, uint32_t event_mask) {
     data.piezeo_hit = true;
 }
 
+void blink_led() {
+    for (int j = 0; j<5; j++) {
+        gpio_put(LED_PIN, 1);
+        sleep_ms(500);
+        gpio_put(LED_PIN, 0);
+        sleep_ms(500);
+    }
+}
+
 bool read_button(int button) {
     // false jos nappi pohjassa. eli samoin kuin gpio_get
     bool button_status = gpio_get(button);
@@ -180,8 +189,10 @@ int main() {
                     no_pill_sent = true;
                 }
 
-                // jos pilleriä ei tunnisteta 10 sekunnin sisällä lähetetään viesti
-                if (!data.piezeo_hit && !no_pill_sent && (now - last_motor_time > 10 * 1000 * 1000)) {
+                // jos pilleriä ei tunnisteta 4 sekunnin sisällä lähetetään viesti
+                if (!data.piezeo_hit && !no_pill_sent && (now - last_motor_time > 4 * 1000 * 1000)) {
+                    gpio_put(LED_PIN,0);
+                    blink_led(); // led vilkkuu 5 kertaa
                     char buffer[64];
                     snprintf(buffer, sizeof(buffer), "No pill detected from lokero: %d", data.pill_counter);
                     if (data.lora_connected) {
@@ -192,6 +203,7 @@ int main() {
                 //siirretty tänne jotta lähettää dosetti tyhjä viimeisenä viestinä. "current lokero x" jälkeen
                 if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
                     sen_lora_msg("Dosetti tyhja!");
+                    blink_led();
                     printf("Dosetti tyhja viesti lahetetty\n");
                     data.state = BOOT;
                 }
