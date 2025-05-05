@@ -165,7 +165,6 @@ int main() {
 
                 // moottori
                 if (run_motor_30(&data)) {
-                    data.pill_counter++;
 
                     write_status_to_eeprom(data);
 

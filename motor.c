@@ -109,14 +109,14 @@ bool run_motor_30(program_data *motor) {
     //palauttaa true jos moottori liikkui
     static uint64_t last_time = 0;
     uint64_t now = time_us_64();
-
     if (now - last_time >= 10000000) {
+        motor->pill_counter++;
         motor->motor_running = true;
-        write_status_to_eeprom(*motor);
+        write_status_to_eeprom(*motor); //kirjoitetaan että pyöritys käynnissä
         run_motor(motor, motor->step_counts / 8,0);
         last_time = now;
         motor->motor_running = false;
-        write_status_to_eeprom(*motor);
+        write_status_to_eeprom(*motor); //kirjoitetaan että pyöritys ei käynnissä
         return true;
     }
     return false;
