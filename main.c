@@ -74,7 +74,7 @@ int main() {
     bool led_state = false;
 
     //lora:
-    printf("Yritetään lora yhteyttä...\n");
+    printf("Yritetaan lora yhteytta...\n");
     if (set_up_lora()) {
         data.lora_connected = true;
         sen_lora_msg("Connected to Lorawan");
@@ -102,6 +102,7 @@ int main() {
         if(data.state != BOOT) {
             if (data.motor_running==true) {
                 recalib(&data);
+                sen_lora_msg("Power off during turning");
             }
         }
     }
@@ -151,7 +152,7 @@ int main() {
                     data.state = PILL;
                     write_status_to_eeprom(data);
                     if (data.lora_connected) {
-                        sen_lora_msg("Calibrated");
+                        sen_lora_msg("Calibrated, aloitetaan pillereiden jako");
                     }
                     break;
                 }
@@ -203,7 +204,6 @@ int main() {
                 if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
                     sen_lora_msg("Dosetti tyhja!");
                     blink_led();
-                    printf("Dosetti tyhja viesti lahetetty\n");
                     data.state = BOOT;
                 }
                 break;
