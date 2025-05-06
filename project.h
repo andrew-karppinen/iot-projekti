@@ -14,6 +14,9 @@
 #define IN3 6
 #define IN4 13
 
+#define MOTOR_OFFSET 110 // jotta luukku olisi paremmin lokeron kohdalla
+#define dispense_intervall 30 // pillereiden jako väli sekunteina
+
 #define BUTTON 7 //kalibrointi, ohjelman aloitus
 #define RESET_BUTTON 8 //resetointi, eepromin alustus
 #define LED_PIN 20
@@ -36,10 +39,7 @@
 
 typedef  enum {
     BOOT =0x00,
-    PILL = 0x01,
-    DISPENSED = 0x02,
-    NOT_DISPENSED = 0x03,
-    EMPTY = 0x04
+    PILL = 0x01
 }State;
 
 //structi jossa dataa säilytetään, anturien ja moottorien tilatietoja

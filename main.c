@@ -102,7 +102,9 @@ int main() {
         if(data.state != BOOT) {
             if (data.motor_running==true) {
                 recalib(&data);
-                sen_lora_msg("Power off during turning");
+                if(data.lora_connected) {
+                    sen_lora_msg("Power off during turning, recalibrated");
+                }
             }
         }
     }
@@ -179,11 +181,13 @@ int main() {
                     no_pill_sent = false;
                 }
 
-                // Pilleri tunnistetaan = lähetetään tieto loraan
+                // Pilleri tunnistetaan
                 if (data.piezeo_hit) {
-                    char buffer[64];
-                    snprintf(buffer, sizeof(buffer), "Pill detected from lokero: %d", data.pill_counter);
-                    sen_lora_msg(buffer);
+                    if (data.lora_connected) {
+                        char buffer[64];
+                        snprintf(buffer, sizeof(buffer), "Pill detected from lokero: %d", data.pill_counter);
+                        sen_lora_msg(buffer);
+                    }
                     printf("hit!\n");
                     data.piezeo_hit = false;
                     no_pill_sent = true;
@@ -202,7 +206,9 @@ int main() {
                 }
                 //siirretty tänne jotta lähettää dosetti tyhjä viimeisenä viestinä. "current lokero x" jälkeen
                 if(data.pill_counter >=7) { //dosetti pyörähtänyt ympäri
-                    sen_lora_msg("Dosetti tyhja!");
+                    if (data.lora_connected) {
+                        sen_lora_msg("Dosetti tyhja!");
+                    }
                     blink_led();
                     data.state = BOOT;
                 }

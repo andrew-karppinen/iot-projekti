@@ -3,6 +3,9 @@
 #include "project.h"
 #include "hardware/adc.h"
 
+static uint64_t last_time = 0;
+
+
 
 // Puoliaskel-sekvenssi (8 vaihetta)
 const uint8_t halfstep_sequence[8][4] = {
@@ -55,7 +58,7 @@ void recalib(program_data *motor) {
         new_status = gpio_get(OPTO_PIN);
 
         if(status != new_status ){  //tilanmuuts havaittu
-            run_motor(motor,110,1);
+            run_motor(motor,MOTOR_OFFSET,1);
             run_motor(motor,motor->step_counts/8*(motor->pill_counter),0);
             return;
         }
@@ -100,16 +103,20 @@ void calib(program_data *motor) {
     motor->step_counts = step_counter/3; //lasketaan keskiarvo
 
 
-
-    run_motor(motor,110,0); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
+    run_motor(motor,MOTOR_OFFSET,0); //pyöritetään hiukan jotta luukku osuu paremmin kohdalle
 }
 
 // to run once in 30 sec
 bool run_motor_30(program_data *motor) {
     //palauttaa true jos moottori liikkui
-    static uint64_t last_time = 0;
     uint64_t now = time_us_64();
-    if (now - last_time >= 10000000) {
+
+    // Sen sijaan varmista, että alustetaan ensimmäisellä kutsulla
+    if (last_time == 0) {
+        last_time = now;
+    }
+
+    if (now - last_time >= dispense_intervall * 1000 * 1000) {
         motor->pill_counter++;
         motor->motor_running = true;
         write_status_to_eeprom(*motor); //kirjoitetaan että pyöritys käynnissä
