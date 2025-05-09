@@ -63,6 +63,7 @@ void init_data(program_data *data) {
     data->pill_counter = 0;
     data->state = BOOT;
     data->motor_running = false;
+    data->last_motor_time = time_us_64(); //ajastimen alustus
 }
 
 int main() {
@@ -106,6 +107,7 @@ int main() {
                     sen_lora_msg("Power off during turning, recalibrated");
                 }
             }
+            data.last_motor_time  = time_us_64(); //ajastimen alustus
         }
     }
 
@@ -152,6 +154,7 @@ int main() {
                 }
                 if (data.calibrated) {
                     data.state = PILL;
+                    data.last_motor_time = time_us_64(); //ajastimen alustus
                     write_status_to_eeprom(data);
                     if (data.lora_connected) {
                         sen_lora_msg("Calibrated, aloitetaan pillereiden jako");

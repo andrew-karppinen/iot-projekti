@@ -3,7 +3,6 @@
 #include "project.h"
 #include "hardware/adc.h"
 
-static uint64_t last_time = 0;
 
 
 
@@ -111,17 +110,13 @@ bool run_motor_30(program_data *motor) {
     //palauttaa true jos moottori liikkui
     uint64_t now = time_us_64();
 
-    // Sen sijaan varmista, että alustetaan ensimmäisellä kutsulla
-    if (last_time == 0) {
-        last_time = now;
-    }
 
-    if (now - last_time >= dispense_intervall * 1000 * 1000) {
+    if (now - motor->last_motor_time >= dispense_intervall * 1000 * 1000) {
         motor->pill_counter++;
         motor->motor_running = true;
         write_status_to_eeprom(*motor); //kirjoitetaan että pyöritys käynnissä
         run_motor(motor, motor->step_counts / 8,0);
-        last_time = now;
+        motor->last_motor_time = now;
         motor->motor_running = false;
         write_status_to_eeprom(*motor); //kirjoitetaan että pyöritys ei käynnissä
         return true;
