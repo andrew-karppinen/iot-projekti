@@ -55,6 +55,7 @@ typedef  struct {
     int pill_counter; //annettujen lääkkeiden määrä
     bool motor_running; //onko moottori pyörimäss, hyödynnetään jotta tiedetään pyörikö moottori virrankatkaisun aikana
     State state; //tilatieto
+    uint64_t last_motor_time;
 } program_data;
 
 
