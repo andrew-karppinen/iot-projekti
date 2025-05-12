@@ -31,6 +31,9 @@
 #define EEPROM_STATE_ADDR 0x0002
 
 //lora
+
+#define LORA_APPKEY "585b2d2ae83096eb49df206a0e47d774" //vaihda omaan appkey
+
 #define UART_ID uart1
 #define BAUD_RATE 9600
 #define UART_TX_PIN 4

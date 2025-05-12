@@ -41,7 +41,10 @@ bool set_up_lora(void) {
         uart_puts(UART_ID, "AT+MODE=LWOTAA\r\n");
         if (!read_response(resp, sizeof(resp), 5000)) continue;
 
-        uart_puts(UART_ID, "AT+KEY=APPKEY,\"585b2d2ae83096eb49df206a0e47d774\"\r\n");// vaihda omaan appkey
+        char cmd[100];
+        sprintf(cmd, "AT+KEY=APPKEY,\"%s\"\r\n", LORA_APPKEY);
+        uart_puts(UART_ID, cmd);
+
         if (!read_response(resp, sizeof(resp), 5000)) continue;
 
         uart_puts(UART_ID, "AT+CLASS=A\r\n");
